@@ -3,12 +3,12 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/dashboard', function () {
-    return view('layouts.dashboard');
+    return view('layouts.admin.dashboard');
 });
 
 
 Route::get('/app', function () {
-    return view('layouts.app');
+    return view('layouts.admin.app');
 });
 
 Route::get('/menu', function () {
@@ -16,5 +16,5 @@ Route::get('/menu', function () {
 });
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('layouts.landing.index');
 });

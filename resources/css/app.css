@@ -1,4 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap");
+
+@layer base {
+    h1,
+    h2,
+    h3 {
+        @apply font-serif;
+    }
+
+    body {
+        @apply font-sans;
+    }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-

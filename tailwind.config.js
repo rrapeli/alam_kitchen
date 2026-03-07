@@ -1,3 +1,5 @@
+import defaultTheme from 'tailwindcss/defaultTheme';
+
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [
@@ -5,8 +7,13 @@ export default {
         "./resources/**/*.js",
         "./resources/**/*.vue",
     ],
+    darkMode: "class",
     theme: {
         extend: {
+            fontFamily: {
+                sans: ["Inter", ...defaultTheme.fontFamily.sans],
+                serif: ["Playfair Display", "serif"],
+            },
             animation: {
                 "slide-in": "slideIn 0.3s ease-out",
                 "fade-in": "fadeIn 0.5s ease-out",

@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Alam Kitchen</title>
+    <title>Alam Kitchen | @yield('title')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap"
@@ -107,7 +108,7 @@
             </button>
 
             <!-- Logo -->
-            <h1 class="tracking-[0.3em] font-semibold text-xs sm:text-sm md:text-base">H&H KITCHEN</h1>
+            <h1 class="tracking-[0.3em] font-semibold text-xs sm:text-sm md:text-base">Alam Kitchen</h1>
 
             <!-- Desktop Menu -->
             <div class="hidden lg:flex items-center gap-6">
@@ -685,7 +686,7 @@
 
             alert(
                 `Checkout Summary:\n\nTotal Items: ${itemCount}\nTotal Amount: $${total.toFixed(2)}\n\nThank you for your order!`
-                );
+            );
 
             cart = [];
             updateCart();
@@ -898,7 +899,7 @@
             });
         });
     </script>
-
+    @stack('scripts')
 </body>
 
 </html>
