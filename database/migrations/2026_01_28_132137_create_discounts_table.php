@@ -16,8 +16,10 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->text('description')->nullable();
             $table->decimal('percentage', 5, 2);
+            $table->decimal('amount', 10, 2);
             $table->dateTime('valid_from');
             $table->dateTime('valid_until');
+            $table->boolean('is_active')->default(true);
 
             $table->softDeletes();
             $table->timestamps();
