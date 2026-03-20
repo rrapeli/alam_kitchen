@@ -3,6 +3,11 @@ set -e
 
 cd /var/www/html
 
+if [ ! -d "node_modules" ]; then
+    echo "Installing NPM dependencies..."
+    npm install
+fi
+
 # Pastikan .env ada
 if [ ! -f .env ]; then
   echo ".env belum ada, copy dari example"
