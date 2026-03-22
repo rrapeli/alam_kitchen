@@ -17,23 +17,68 @@
             <nav class="space-y-1">
 
                 @php
-                    $navItems = [
-                        ['url' => '/dashboard', 'label' => 'Dashboard', 'route' => 'dashboard', 'icon' => 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z'],
-                        ['url' => '/menu',      'label' => 'Menu',      'route' => 'menu*',      'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 'badge' => '24'],
-                        ['url' => '/orders',   'label' => 'Orders',    'route' => 'orders*',    'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'],
-                        ['url' => '/customers','label' => 'Customers', 'route' => 'customers*', 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'],
-                        ['url' => '/analytics','label' => 'Analytics', 'route' => 'analytics*', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
+                    $user = Auth::user();
+                    $role = 'kasir'; // default
+
+                    if ($user && $user->hasRole('super_admin')) {
+                        $role = 'super_admin';
+                    } elseif ($user && $user->hasRole('admin')) {
+                        $role = 'admin';
+                    } elseif ($user && $user->hasRole('kasir')) {
+                        $role = 'kasir';
+                    }
+
+                    // Prefix URL berdasarkan role
+                    $prefixes = [
+                        'super_admin' => '/super-admin',
+                        'admin' => '/admin',
+                        'kasir' => '/kasir',
                     ];
+                    $prefix = $prefixes[$role] ?? '/kasir';
+
+                    // Dashboard item — selalu ada untuk semua role
+                    $dashboardItem = [
+                        'url' => $prefix . '/dashboard',
+                        'label' => 'Dashboard',
+                        'route' => $role . '.dashboard',
+                        'icon' => 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+                    ];
+
+                    // Nav items berdasarkan role
+                    $navItems = [$dashboardItem];
+
+                    if ($role === 'super_admin') {
+                        $navItems = array_merge($navItems, [
+                            ['url' => $prefix . '/users', 'label' => 'Kelola User', 'route' => 'super_admin.users*', 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'],
+                            ['url' => $prefix . '/menu', 'label' => 'Menu', 'route' => 'super_admin.menu*', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
+                            ['url' => $prefix . '/orders', 'label' => 'Pesanan', 'route' => 'super_admin.orders*', 'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'],
+                            ['url' => $prefix . '/analytics', 'label' => 'Analisis', 'route' => 'super_admin.analytics*', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
+                        ]);
+                    } elseif ($role === 'admin') {
+                        $navItems = array_merge($navItems, [
+                            ['url' => $prefix . '/menu', 'label' => 'Menu', 'route' => 'admin.menu*', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
+                            ['url' => $prefix . '/orders', 'label' => 'Pesanan', 'route' => 'admin.orders*', 'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'],
+                            ['url' => $prefix . '/analytics', 'label' => 'Analisis', 'route' => 'admin.analytics*', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
+                        ]);
+                    } elseif ($role === 'kasir') {
+                        $navItems = array_merge($navItems, [
+                            ['url' => $prefix . '/transaksi', 'label' => 'Transaksi', 'route' => 'kasir.transaksi*', 'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'],
+                            ['url' => $prefix . '/orders', 'label' => 'Pesanan', 'route' => 'kasir.orders*', 'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'],
+                            ['url' => $prefix . '/menu', 'label' => 'Lihat Menu', 'route' => 'kasir.menu*', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
+                        ]);
+                    }
                 @endphp
 
                 @foreach ($navItems as $item)
-                    @php $active = request()->routeIs($item['route']); @endphp
+                    @php
+                        $active = request()->routeIs($item['route']) || request()->url() === url($item['url']);
+                    @endphp
                     <a href="{{ url($item['url']) }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                             {{ $active
-                                ? 'bg-emerald-700 text-white shadow-lg'
+                                ? 'bg-emerald-700 text-white shadow-lg shadow-emerald-700/30'
                                 : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 {{ $active ? 'text-white' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"></path>
                         </svg>
                         <span class="font-medium">{{ $item['label'] }}</span>
@@ -58,24 +103,26 @@
 
                 @php
                     $generalItems = [
-                        ['url' => '/settings', 'label' => 'Settings', 'route' => 'settings*', 'icons' => [
+                        ['url' => $prefix . '/settings', 'label' => 'Settings', 'route' => $role . '.settings*', 'icons' => [
                             'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
                             'M15 12a3 3 0 11-6 0 3 3 0 016 0z',
                         ]],
-                        ['url' => '/help', 'label' => 'Help', 'route' => 'help*', 'icons' => [
+                        ['url' => $prefix . '/help', 'label' => 'Help', 'route' => $role . '.help*', 'icons' => [
                             'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
                         ]],
                     ];
                 @endphp
 
                 @foreach ($generalItems as $item)
-                    @php $active = request()->routeIs($item['route']); @endphp
+                    @php
+                        $active = request()->routeIs($item['route']) || request()->url() === url($item['url']);
+                    @endphp
                     <a href="{{ url($item['url']) }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                             {{ $active
-                                ? 'bg-emerald-700 text-white shadow-lg'
+                                ? 'bg-emerald-700 text-white shadow-lg shadow-emerald-700/30'
                                 : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 {{ $active ? 'text-white' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             @foreach ($item['icons'] as $path)
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $path }}"></path>
                             @endforeach

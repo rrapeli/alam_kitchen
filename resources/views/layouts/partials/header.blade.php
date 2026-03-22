@@ -49,12 +49,15 @@
             <!-- Profile -->
             <div class="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-gray-700">
                 <div class="hidden sm:block text-right">
-                    <p class="text-sm font-semibold">Admin Cafe</p>
-                    <p class="text-xs text-gray-500">admin@kalcer.com</p>
+                    <p class="text-sm font-semibold">{{ Auth::user()->name ?? 'User' }}</p>
+                    <p class="text-xs text-gray-500">{{ Auth::user()->email ?? '' }}</p>
                 </div>
+                @php
+                    $initials = collect(explode(' ', Auth::user()->name ?? 'U'))->map(fn($w) => strtoupper(substr($w, 0, 1)))->take(2)->join('');
+                @endphp
                 <div
                     class="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-400 rounded-full flex items-center justify-center text-white font-semibold">
-                    AC
+                    {{ $initials }}
                 </div>
             </div>
         </div>
