@@ -10,6 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\TableController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\PaymentCallbackController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -29,6 +30,15 @@ Route::middleware('guest')->group(function () {
     Route::get('/register',  [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
 });
+
+// Public API: validate discount code
+Route::post('/api/discount/validate', [DiscountController::class, 'validatePromo'])->name('api.discount.validate');
+
+// Payment Callbacks & Webhooks
+Route::post('/payment/midtrans-callback', [PaymentCallbackController::class, 'handleNotification'])->name('payment.callback');
+Route::get('/payment/finish', function() {
+    return view('landing.payment-finish');
+})->name('payment.finish');
 
 // Public order checkout (no auth required)
 Route::post('/order', [OrderController::class, 'store'])->name('order.store');

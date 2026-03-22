@@ -38,12 +38,14 @@ class TransactionController extends Controller
             'customer_phone'   => 'required|string|max:20',
             'pickup_time'      => 'nullable|date',
             'notes'            => 'nullable|string|max:1000',
+            'discount_amount'  => 'nullable|numeric|min:0',
             'payment_method'   => 'required|in:cash,transfer,qris,e-wallet',
             'payment_status'   => 'required|in:paid,unpaid',
             'status'           => 'required|in:confirmed,processing,ready,completed',
             'items'            => 'required|array|min:1',
             'items.*.menu_id'  => 'required|exists:menus,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'discount_code'    => 'nullable|string',
         ]);
 
         try {
@@ -75,6 +77,20 @@ class TransactionController extends Controller
                     ];
                 }
 
+                $discountAmount = min($validated['discount_amount'] ?? 0, $subtotal);
+                $totalAmount = $subtotal - $discountAmount;
+
+                $discountId = null;
+                if (!empty($validated['discount_code'])) {
+                    $discount = \App\Models\Discount::where('code', $validated['discount_code'])->first();
+                    if ($discount && $discount->is_active) {
+                        $discountId = $discount->id;
+                        if ($discountAmount > 0) {
+                            $discount->increment('used_count');
+                        }
+                    }
+                }
+
                 $order = Order::create([
                     'order_number'    => Order::generateOrderNumber(),
                     'user_id'         => $request->user()->id,
@@ -84,9 +100,10 @@ class TransactionController extends Controller
                     'pickup_time'     => $validated['pickup_time'] ?? now(),
                     'notes'           => $validated['notes'] ?? null,
                     'subtotal'        => $subtotal,
-                    'discount_amount' => 0,
+                    'discount_amount' => $discountAmount,
+                    'discount_id'     => $discountId,
                     'tax_amount'      => 0,
-                    'total_amount'    => $subtotal,
+                    'total_amount'    => $totalAmount,
                     'status'          => $validated['status'],
                     'payment_status'  => $validated['payment_status'],
                     'payment_method'  => $validated['payment_method'],

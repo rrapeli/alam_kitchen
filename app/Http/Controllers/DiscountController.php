@@ -110,4 +110,62 @@ class DiscountController extends Controller
 
         return redirect()->back()->with('success', 'Diskon berhasil dihapus!');
     }
+
+    /**
+     * Validate a promo code via AJAX and return calculated discount.
+     */
+    public function validatePromo(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+            'subtotal' => 'required|numeric|min:0'
+        ]);
+
+        $discount = Discount::where('code', $request->code)->first();
+
+        if (!$discount) {
+            return response()->json(['error' => 'Kode promo tidak valid.'], 404);
+        }
+
+        if (!$discount->is_active) {
+            return response()->json(['error' => 'Kode promo sudah tidak aktif.'], 400);
+        }
+
+        if (now()->lt($discount->valid_from) || now()->gt($discount->valid_until)) {
+            return response()->json(['error' => 'Kode promo sudah expired.'], 400);
+        }
+
+        if ($discount->min_order_amount > 0 && $request->subtotal < $discount->min_order_amount) {
+            return response()->json(['error' => 'Subtotal pesanan tidak mencapai batas minimum (Rp ' . number_format($discount->min_order_amount, 0, ',', '.') . ').'], 400);
+        }
+
+        if ($discount->usage_limit !== null && $discount->used_count >= $discount->usage_limit) {
+            return response()->json(['error' => 'Kode promo telah mencapai batas penggunaan.'], 400);
+        }
+
+        // Calculation
+        $discountAmount = 0;
+        if ($discount->type === 'percentage') {
+            $discountAmount = ($discount->percentage / 100) * $request->subtotal;
+            if ($discount->max_discount_amount > 0) {
+                $discountAmount = min($discountAmount, $discount->max_discount_amount);
+            }
+        } else {
+            $discountAmount = $discount->amount;
+        }
+
+        // Ensure not exceeding subtotal
+        $discountAmount = min($discountAmount, $request->subtotal);
+
+        return response()->json([
+            'success' => true,
+            'discount' => [
+                'id' => $discount->id,
+                'code' => $discount->code,
+                'type' => $discount->type,
+                'calculated_discount' => $discountAmount,
+            ],
+            'message' => 'Kode promo berhasil diaplikasikan!'
+        ]);
+    }
 }

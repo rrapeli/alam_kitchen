@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Database\Seeders\CategorySeeder;
+use Database\Seeders\MenuSeeder;
 use Database\Seeders\RoleAndPermissionSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,8 +14,9 @@ class DatabaseSeeder extends Seeder
     {
         // Panggil seeder lain
         $this->call([
-            CategorySeeder::class ,
-            RoleAndPermissionSeeder::class ,
+            CategorySeeder::class,
+            MenuSeeder::class,
+            RoleAndPermissionSeeder::class,
         ]);
 
         // Seeder user

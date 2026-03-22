@@ -90,6 +90,9 @@ class ReservationController extends Controller
 
         $reservation = Reservation::create($validated);
 
+        // Update table status to reserved
+        $table->update(['status' => 'reserved']);
+
         return redirect()->back()->with('success', "Reservasi untuk {$reservation->customer_name} berhasil dibuat!");
     }
 
@@ -111,6 +114,7 @@ class ReservationController extends Controller
             'items'                => 'nullable|array',
             'items.*.menu_id'      => 'required_with:items|exists:menus,id',
             'items.*.quantity'     => 'required_with:items|integer|min:1',
+            'discount_code'        => 'nullable|string',
         ]);
 
         // Check table capacity
@@ -144,6 +148,9 @@ class ReservationController extends Controller
 
                 $reservation = Reservation::create($rsvData);
 
+                // Update table status to reserved
+                $table->update(['status' => 'reserved']);
+
                 $order = null;
 
                 // If menu items were added, create an order
@@ -175,6 +182,29 @@ class ReservationController extends Controller
                         ];
                     }
 
+                    $discountAmount = 0;
+                    $discountId = null;
+
+                    if (!empty($validated['discount_code'])) {
+                        $discount = \App\Models\Discount::where('code', $validated['discount_code'])->first();
+                        if ($discount && $discount->is_active && $subtotal >= ($discount->min_order_amount ?? 0)) {
+                            if (now()->gte($discount->valid_from) && now()->lte($discount->valid_until)) {
+                                if ($discount->usage_limit === null || $discount->used_count < $discount->usage_limit) {
+                                    if ($discount->type === 'percentage') {
+                                        $calc = ($discount->percentage / 100) * $subtotal;
+                                        $discountAmount = $discount->max_discount_amount > 0 ? min($calc, $discount->max_discount_amount) : $calc;
+                                    } else {
+                                        $discountAmount = $discount->amount;
+                                    }
+                                    $discountAmount = min($discountAmount, $subtotal);
+                                    $discountId = $discount->id;
+
+                                    $discount->increment('used_count');
+                                }
+                            }
+                        }
+                    }
+
                     $order = Order::create([
                         'order_number'    => Order::generateOrderNumber(),
                         'reservation_id'  => $reservation->id,
@@ -184,9 +214,10 @@ class ReservationController extends Controller
                         'pickup_time'     => \Carbon\Carbon::parse($startDateTime),
                         'notes'           => $validated['special_requests'] ?? null,
                         'subtotal'        => $subtotal,
-                        'discount_amount' => 0,
+                        'discount_amount' => $discountAmount,
+                        'discount_id'     => $discountId,
                         'tax_amount'      => 0,
-                        'total_amount'    => $subtotal,
+                        'total_amount'    => $subtotal - $discountAmount,
                         'status'          => 'confirmed',
                         'payment_status'  => 'unpaid',
                         'payment_method'  => 'cash',
@@ -208,7 +239,18 @@ class ReservationController extends Controller
                 $msg .= " Pesanan senilai Rp " . number_format($result['order']->total_amount, 0, ',', '.') . " telah dibuat.";
             }
 
-            return redirect()->back()->with('booking_success', $msg);
+            // If an order exists, redirect to payment
+            if ($result['order']) {
+                $midtrans = new \App\Services\MidtransService();
+                $payment = $midtrans->createSnapTransaction($result['order']);
+                if ($payment && $payment->redirect_url) {
+                    // Set flash data to be displayed when returning from Midtrans, or just rely on the new payment finish page
+                    session()->flash('success', $msg);
+                    return redirect($payment->redirect_url);
+                }
+            }
+
+            return redirect()->back()->with('success', $msg);
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -285,6 +327,7 @@ class ReservationController extends Controller
             'payment_status'   => 'required|in:paid,unpaid',
             'status'           => 'required|in:confirmed,processing,ready,completed',
             'notes'            => 'nullable|string|max:1000',
+            'discount_amount'  => 'nullable|numeric|min:0',
             'items'            => 'required|array|min:1',
             'items.*.menu_id'  => 'required|exists:menus,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -319,6 +362,9 @@ class ReservationController extends Controller
                     ];
                 }
 
+                $discountAmount = min($validated['discount_amount'] ?? 0, $subtotal);
+                $totalAmount = $subtotal - $discountAmount;
+
                 $order = Order::create([
                     'order_number'    => Order::generateOrderNumber(),
                     'user_id'         => $request->user()->id,
@@ -329,9 +375,9 @@ class ReservationController extends Controller
                     'pickup_time'     => now(),
                     'notes'           => $validated['notes'] ?? null,
                     'subtotal'        => $subtotal,
-                    'discount_amount' => 0,
+                    'discount_amount' => $discountAmount,
                     'tax_amount'      => 0,
-                    'total_amount'    => $subtotal,
+                    'total_amount'    => $totalAmount,
                     'status'          => $validated['status'],
                     'payment_status'  => $validated['payment_status'],
                     'payment_method'  => $validated['payment_method'],

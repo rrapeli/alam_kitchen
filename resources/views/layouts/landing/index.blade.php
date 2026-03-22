@@ -237,6 +237,21 @@
                     <!-- Will be populated by JS -->
                 </div>
 
+                <div>
+                    <label class="block text-sm mb-2">Kode Promo</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="checkout-promo-input" autocomplete="off"
+                            class="w-full px-4 py-3 rounded-2xl border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-orange-500 uppercase text-sm"
+                            placeholder="KODE PROMO">
+                        <button type="button" onclick="applyCheckoutPromo()"
+                            class="bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 px-5 rounded-2xl text-sm font-semibold hover:bg-black transition whitespace-nowrap">
+                            Gunakan
+                        </button>
+                    </div>
+                    <p id="checkout-promo-msg" class="text-xs mt-2 hidden"></p>
+                    <input type="hidden" name="discount_code" id="checkout-discount-code">
+                </div>
+
                 <button type="submit"
                     class="w-full bg-orange-500 text-white py-3 rounded-full hover:bg-orange-600 transition font-semibold">
                     Pesan Sekarang
@@ -266,9 +281,9 @@
             </div>
 
             @if (session('booking_error'))
-                <div class="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-4 py-3 rounded-2xl mb-4 text-sm">
-                    {{ session('booking_error') }}
-                </div>
+            <div class="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-4 py-3 rounded-2xl mb-4 text-sm">
+                {{ session('booking_error') }}
+            </div>
             @endif
 
             <form id="booking-form" method="POST" action="{{ route('reservation.guest.store') }}">
@@ -325,10 +340,10 @@
                                 class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-orange-500">
                                 <option value="">Pilih meja</option>
                                 @foreach ($tables as $table)
-                                    <option value="{{ $table->id }}" {{ old('table_id') == $table->id ? 'selected' : '' }}>
-                                        #{{ $table->table_number }} ({{ $table->capacity }} pax)
-                                        {{ $table->location ? '- ' . $table->location : '' }}
-                                    </option>
+                                <option value="{{ $table->id }}" {{ old('table_id') == $table->id ? 'selected' : '' }}>
+                                    #{{ $table->table_number }} ({{ $table->capacity }} pax)
+                                    {{ $table->location ? '- ' . $table->location : '' }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -361,26 +376,26 @@
                             class="booking-cat-btn active-cat px-4 py-1.5 rounded-full text-sm font-medium border border-gray-300 dark:border-gray-600 whitespace-nowrap transition"
                             data-cat="all">Semua</button>
                         @foreach ($categories as $cat)
-                            <button type="button" onclick="filterBookingMenu('{{ $cat->name }}')"
-                                class="booking-cat-btn px-4 py-1.5 rounded-full text-sm font-medium border border-gray-300 dark:border-gray-600 whitespace-nowrap transition"
-                                data-cat="{{ $cat->name }}">{{ $cat->name }}</button>
+                        <button type="button" onclick="filterBookingMenu('{{ $cat->name }}')"
+                            class="booking-cat-btn px-4 py-1.5 rounded-full text-sm font-medium border border-gray-300 dark:border-gray-600 whitespace-nowrap transition"
+                            data-cat="{{ $cat->name }}">{{ $cat->name }}</button>
                         @endforeach
                     </div>
 
                     <!-- Menu Grid -->
                     <div id="booking-menu-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[40vh] overflow-y-auto pr-1 mb-4">
                         @foreach ($menus as $menu)
-                            <div class="booking-menu-item bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 transition hover:shadow-md cursor-pointer"
-                                data-category="{{ $menu->category ? $menu->category->name : 'Uncategorized' }}"
-                                data-id="{{ $menu->id }}"
-                                data-name="{{ $menu->name }}"
-                                data-price="{{ $menu->price }}"
-                                onclick="addBookingItem({{ $menu->id }}, '{{ addslashes($menu->name) }}', {{ $menu->price }})">
-                                <img src="{{ $menu->image ? asset('storage/' . $menu->image) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c' }}"
-                                    class="w-full h-20 object-cover rounded-xl mb-2" alt="{{ $menu->name }}">
-                                <p class="text-xs font-semibold leading-tight mb-1 line-clamp-2">{{ $menu->name }}</p>
-                                <p class="text-xs text-orange-500 font-bold">Rp {{ number_format($menu->price, 0, ',', '.') }}</p>
-                            </div>
+                        <div class="booking-menu-item bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 transition hover:shadow-md cursor-pointer"
+                            data-category="{{ $menu->category ? $menu->category->name : 'Uncategorized' }}"
+                            data-id="{{ $menu->id }}"
+                            data-name="{{ $menu->name }}"
+                            data-price="{{ $menu->price }}"
+                            onclick="addBookingItem({{ $menu->id }}, '{{ addslashes($menu->name) }}', {{ $menu->price }})">
+                            <img src="{{ $menu->image ? asset('storage/' . $menu->image) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c' }}"
+                                class="w-full h-20 object-cover rounded-xl mb-2" alt="{{ $menu->name }}">
+                            <p class="text-xs font-semibold leading-tight mb-1 line-clamp-2">{{ $menu->name }}</p>
+                            <p class="text-xs text-orange-500 font-bold">Rp {{ number_format($menu->price, 0, ',', '.') }}</p>
+                        </div>
                         @endforeach
                     </div>
 
@@ -390,6 +405,26 @@
                         <div id="booking-order-items" class="space-y-2 text-sm">
                             <p class="text-gray-400 text-center py-2" id="booking-empty-msg">Belum ada item — klik menu di atas untuk menambahkan</p>
                         </div>
+                        
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 hidden" id="booking-promo-section">
+                            <div class="flex gap-2">
+                                <input type="text" id="booking-promo-input" autocomplete="off"
+                                    class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm uppercase"
+                                    placeholder="Kode Promo">
+                                <button type="button" onclick="applyBookingPromo()"
+                                    class="bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 px-4 rounded-xl text-sm font-semibold hover:bg-black transition whitespace-nowrap">
+                                    Gunakan
+                                </button>
+                            </div>
+                            <p id="booking-promo-msg" class="text-xs mt-1 hidden"></p>
+                            <input type="hidden" name="discount_code" id="booking-discount-code">
+                        </div>
+
+                        <div id="booking-order-discount-row" class="hidden border-t border-gray-200 dark:border-gray-700 pt-2 mt-2 flex justify-between text-red-500 font-medium text-sm">
+                            <span>Diskon</span>
+                            <span id="booking-discount-value">- Rp 0</span>
+                        </div>
+                        
                         <div id="booking-order-total" class="hidden border-t border-gray-200 dark:border-gray-700 pt-2 mt-2 flex justify-between font-bold">
                             <span>Total</span>
                             <span id="booking-total-value">Rp 0</span>
@@ -807,10 +842,18 @@
                 </div>`;
             });
 
+            summaryHtml += `<div id="checkout-discount-row" class="hidden flex justify-between text-red-500 font-medium text-sm pt-2">
+                <span>Diskon</span>
+                <span id="checkout-discount-value">- Rp 0</span>
+            </div>`;
             summaryHtml += `<div class="flex justify-between font-bold text-sm border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                 <span>Total</span>
-                <span>Rp ${total.toLocaleString('id-ID')}</span>
+                <span id="checkout-total-value">Rp ${total.toLocaleString('id-ID')}</span>
             </div>`;
+            window.checkoutSubtotal = total;
+            document.getElementById('checkout-promo-input').value = '';
+            document.getElementById('checkout-promo-msg').classList.add('hidden');
+            document.getElementById('checkout-discount-code').value = '';
 
             summaryEl.innerHTML = summaryHtml;
 
@@ -954,7 +997,12 @@
             if (existing) {
                 existing.quantity += 1;
             } else {
-                bookingCart.push({ id, name, price, quantity: 1 });
+                bookingCart.push({
+                    id,
+                    name,
+                    price,
+                    quantity: 1
+                });
             }
             renderBookingCart();
         }
@@ -1024,6 +1072,17 @@
             totalEl.classList.remove('hidden');
             totalVal.textContent = `Rp ${total.toLocaleString('id-ID')}`;
             inputsContainer.innerHTML = hiddenInputs;
+            
+            document.getElementById('booking-promo-section').classList.remove('hidden');
+            window.bookingSubtotal = total;
+            
+            // Re-apply promo if exists
+            const currentCode = document.getElementById('booking-discount-code').value;
+            if (currentCode) {
+                applyBookingPromo(currentCode);
+            } else {
+                document.getElementById('booking-order-discount-row').classList.add('hidden');
+            }
         }
 
         // Category filter for booking menu
@@ -1044,17 +1103,111 @@
             });
         }
 
+        async function validatePromoCode(code, subtotal) {
+            try {
+                const response = await fetch('{{ route("api.discount.validate") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ code: code.toUpperCase(), subtotal })
+                });
+                return await response.json();
+            } catch (error) {
+                return { error: 'Terjadi kesalahan jaringan.' };
+            }
+        }
+
+        async function applyCheckoutPromo() {
+            const input = document.getElementById('checkout-promo-input');
+            const msgEl = document.getElementById('checkout-promo-msg');
+            const codeEl = document.getElementById('checkout-discount-code');
+            const rowEl = document.getElementById('checkout-discount-row');
+            const valEl = document.getElementById('checkout-discount-value');
+            const totalEl = document.getElementById('checkout-total-value');
+            
+            const code = input.value.trim();
+            if(!code) return;
+
+            msgEl.classList.remove('hidden');
+            msgEl.className = 'text-xs mt-2 text-gray-500';
+            msgEl.textContent = 'Memvalidasi...';
+
+            const data = await validatePromoCode(code, window.checkoutSubtotal);
+            
+            if (data.error) {
+                msgEl.className = 'text-xs mt-2 text-red-500';
+                msgEl.textContent = data.error;
+                codeEl.value = '';
+                rowEl.classList.add('hidden');
+                totalEl.textContent = `Rp ${window.checkoutSubtotal.toLocaleString('id-ID')}`;
+            } else if (data.success) {
+                msgEl.className = 'text-xs mt-2 text-green-500';
+                msgEl.textContent = data.message;
+                codeEl.value = data.discount.code;
+                
+                const discAmt = data.discount.calculated_discount;
+                rowEl.classList.remove('hidden');
+                valEl.textContent = `- Rp ${discAmt.toLocaleString('id-ID')}`;
+                
+                const finalTotal = window.checkoutSubtotal - discAmt;
+                totalEl.textContent = `Rp ${finalTotal.toLocaleString('id-ID')}`;
+            }
+        }
+
+        async function applyBookingPromo(existingCode = null) {
+            const input = document.getElementById('booking-promo-input');
+            const msgEl = document.getElementById('booking-promo-msg');
+            const codeEl = document.getElementById('booking-discount-code');
+            const rowEl = document.getElementById('booking-order-discount-row');
+            const valEl = document.getElementById('booking-discount-value');
+            const totalEl = document.getElementById('booking-total-value');
+            
+            const code = existingCode || input.value.trim();
+            if(!code) return;
+
+            if(!existingCode) {
+                msgEl.classList.remove('hidden');
+                msgEl.className = 'text-xs mt-1 text-gray-500';
+                msgEl.textContent = 'Memvalidasi...';
+            }
+
+            const data = await validatePromoCode(code, window.bookingSubtotal);
+            
+            if (data.error) {
+                msgEl.className = 'text-xs mt-1 text-red-500';
+                msgEl.textContent = data.error;
+                codeEl.value = '';
+                rowEl.classList.add('hidden');
+                totalEl.textContent = `Rp ${window.bookingSubtotal.toLocaleString('id-ID')}`;
+            } else if (data.success) {
+                msgEl.className = 'text-xs mt-1 text-green-500';
+                msgEl.textContent = data.message;
+                codeEl.value = data.discount.code;
+                
+                const discAmt = data.discount.calculated_discount;
+                rowEl.classList.remove('hidden');
+                valEl.textContent = `- Rp ${discAmt.toLocaleString('id-ID')}`;
+                
+                const finalTotal = window.bookingSubtotal - discAmt;
+                totalEl.textContent = `Rp ${finalTotal.toLocaleString('id-ID')}`;
+            }
+        }
+
         // Auto-open modal on validation error or show success
-        @if (session('booking_error') || $errors->any())
-            document.addEventListener('DOMContentLoaded', function() {
-                openBookingModal();
-            });
+        @if(session('booking_error') || $errors->any())
+        document.addEventListener('DOMContentLoaded', function() {
+            openBookingModal();
+        });
         @endif
 
-        @if (session('booking_success'))
-            document.addEventListener('DOMContentLoaded', function() {
-                showNotification('{{ session('booking_success') }}');
-            });
+        @if(session('booking_success'))
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification('{{ session('
+                booking_success ') }}');
+        });
         @endif
 
         // Newsletter Form

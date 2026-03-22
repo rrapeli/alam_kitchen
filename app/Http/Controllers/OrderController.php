@@ -25,6 +25,7 @@ class OrderController extends Controller
             'items.*.menu_id'  => 'required|exists:menus,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.notes'    => 'nullable|string|max:500',
+            'discount_code'    => 'nullable|string',
         ]);
 
         try {
@@ -59,6 +60,29 @@ class OrderController extends Controller
                 ];
             }
 
+            $discountAmount = 0;
+            $discountId = null;
+
+            if (!empty($validated['discount_code'])) {
+                $discount = \App\Models\Discount::where('code', $validated['discount_code'])->first();
+                if ($discount && $discount->is_active && $subtotal >= ($discount->min_order_amount ?? 0)) {
+                    if (now()->gte($discount->valid_from) && now()->lte($discount->valid_until)) {
+                        if ($discount->usage_limit === null || $discount->used_count < $discount->usage_limit) {
+                            if ($discount->type === 'percentage') {
+                                $calc = ($discount->percentage / 100) * $subtotal;
+                                $discountAmount = $discount->max_discount_amount > 0 ? min($calc, $discount->max_discount_amount) : $calc;
+                            } else {
+                                $discountAmount = $discount->amount;
+                            }
+                            $discountAmount = min($discountAmount, $subtotal);
+                            $discountId = $discount->id;
+
+                            $discount->increment('used_count');
+                        }
+                    }
+                }
+            }
+
             $order = Order::create([
                 'order_number'    => Order::generateOrderNumber(),
                 'customer_name'   => $validated['customer_name'],
@@ -67,9 +91,10 @@ class OrderController extends Controller
                 'pickup_time'     => $validated['pickup_time'],
                 'notes'           => $validated['notes'] ?? null,
                 'subtotal'        => $subtotal,
-                'discount_amount' => 0,
+                'discount_amount' => $discountAmount,
+                'discount_id'     => $discountId,
                 'tax_amount'      => 0,
-                'total_amount'    => $subtotal,
+                'total_amount'    => $subtotal - $discountAmount,
                 'status'          => 'pending',
                 'payment_status'  => 'unpaid',
             ]);
@@ -81,7 +106,15 @@ class OrderController extends Controller
             return $order;
         });
 
-        return redirect()->route('landing')->with('success', "Pesanan #{$order->order_number} berhasil dibuat! Silakan tunggu konfirmasi.");
+        // Initialize Midtrans Payment
+        $midtrans = new \App\Services\MidtransService();
+        $payment = $midtrans->createSnapTransaction($order);
+
+        if ($payment && $payment->redirect_url) {
+            return redirect($payment->redirect_url);
+        }
+
+        return redirect()->route('landing')->with('success', "Pesanan #{$order->order_number} berhasil dibuat, namun gagal memuat halaman pembayaran. Silakan hubungi kasir.");
         } catch (\Exception $e) {
             return redirect()->route('landing')->with('error', $e->getMessage());
         }

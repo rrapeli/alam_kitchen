@@ -124,14 +124,60 @@
                             class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
                     </div>
 
+                    <!-- Promo Code Input -->
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 mb-3">
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">🎁 Kode Promo</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="kasir-promo-input" autocomplete="off"
+                                class="w-full pl-4 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase"
+                                placeholder="KODE PROMO" />
+                            <button type="button" onclick="applyKasirPromo()"
+                                class="px-3 py-2 text-xs font-bold bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900 rounded-xl transition whitespace-nowrap">
+                                Gunakan
+                            </button>
+                        </div>
+                        <p id="kasir-promo-msg" class="text-xs mt-2 hidden"></p>
+                    </div>
+
+                    <!-- Discount Input -->
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 mb-3">
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">🏷️ Diskon</label>
+                        <div class="flex gap-2">
+                            <div class="relative flex-1">
+                                <input type="number" id="discount-input" min="0" step="any" value="0"
+                                    oninput="applyDiscount()"
+                                    class="w-full pl-4 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                            </div>
+                            <div class="flex bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden">
+                                <button type="button" id="disc-type-rp" onclick="setDiscountType('rp')"
+                                    class="px-3 py-2 text-xs font-bold bg-emerald-600 text-white transition">Rp</button>
+                                <button type="button" id="disc-type-pct" onclick="setDiscountType('pct')"
+                                    class="px-3 py-2 text-xs font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition">%</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="hidden-items-container"></div>
+                    <input type="hidden" name="discount_code" id="input-discount-code" value="">
+                    <input type="hidden" name="discount_amount" id="input-discount-amount" value="0" />
                     <input type="hidden" name="payment_method" id="input-payment-method" value="cash" />
                     <input type="hidden" name="payment_status" id="input-payment-status" value="paid" />
                     <input type="hidden" name="status" id="input-order-status" value="confirmed" />
 
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-lg font-bold">Total</span>
-                        <span id="cart-total" class="text-2xl font-bold text-emerald-600">Rp 0</span>
+                    <!-- Price Summary -->
+                    <div class="space-y-1 mb-4">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-500">Subtotal</span>
+                            <span id="cart-subtotal" class="font-medium">Rp 0</span>
+                        </div>
+                        <div id="discount-row" class="flex justify-between items-center text-sm hidden">
+                            <span class="text-red-500">Diskon</span>
+                            <span id="cart-discount" class="font-medium text-red-500">- Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-2">
+                            <span class="text-lg font-bold">Total</span>
+                            <span id="cart-total" class="text-2xl font-bold text-emerald-600">Rp 0</span>
+                        </div>
                     </div>
 
                     <button type="button" id="btn-submit" onclick="openPaymentModal()"
@@ -163,9 +209,17 @@
             </div>
 
             <!-- Payment Summary -->
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-6">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-500">Total Pembayaran</span>
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-6 space-y-2">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-500">Subtotal</span>
+                    <span id="payment-subtotal" class="font-medium">Rp 0</span>
+                </div>
+                <div id="payment-discount-row" class="flex justify-between items-center text-sm hidden">
+                    <span class="text-red-500">Diskon</span>
+                    <span id="payment-discount" class="font-medium text-red-500">- Rp 0</span>
+                </div>
+                <div class="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-2">
+                    <span class="text-gray-500 font-semibold">Total Pembayaran</span>
                     <span id="payment-total" class="text-2xl font-bold text-emerald-600">Rp 0</span>
                 </div>
             </div>
@@ -284,7 +338,17 @@
                             <span>Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</span>
                         </div>
                     @endforeach
-                    <div class="flex justify-between font-bold text-sm border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                    @if ($receipt['discount_amount'] > 0)
+                        <div class="flex justify-between text-sm border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                            <span>Subtotal</span>
+                            <span>Rp {{ number_format($receipt['subtotal'], 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-red-500">
+                            <span>Diskon</span>
+                            <span>- Rp {{ number_format($receipt['discount_amount'], 0, ',', '.') }}</span>
+                        </div>
+                    @endif
+                    <div class="flex justify-between font-bold text-sm {{ $receipt['discount_amount'] <= 0 ? 'border-t border-gray-200 dark:border-gray-700 pt-2 mt-2' : '' }}">
                         <span>Total</span>
                         <span>Rp {{ number_format($receipt['total_amount'], 0, ',', '.') }}</span>
                     </div>
@@ -305,6 +369,7 @@
             // ============================================
             let cart = [];
             let currentCategory = 'all';
+            let discountType = 'rp'; // 'rp' or 'pct'
 
             // ============================================
             // Menu data from server
@@ -363,8 +428,10 @@
             function renderCart() {
                 const container = document.getElementById('cart-items');
                 const badge = document.getElementById('cart-badge');
+                const subtotalEl = document.getElementById('cart-subtotal');
                 const totalEl = document.getElementById('cart-total');
-                const emptyEl = document.getElementById('cart-empty');
+                const discountRow = document.getElementById('discount-row');
+                const discountEl = document.getElementById('cart-discount');
                 const hiddenContainer = document.getElementById('hidden-items-container');
                 const submitBtn = document.getElementById('btn-submit');
 
@@ -373,19 +440,22 @@
                 if (cart.length === 0) {
                     container.innerHTML = '<p id="cart-empty" class="text-center text-gray-400 py-8 text-sm">Belum ada item.<br>Klik menu untuk menambahkan.</p>';
                     badge.textContent = '0 item';
+                    subtotalEl.textContent = 'Rp 0';
                     totalEl.textContent = 'Rp 0';
+                    discountRow.classList.add('hidden');
+                    document.getElementById('input-discount-amount').value = 0;
                     submitBtn.disabled = true;
                     return;
                 }
 
                 submitBtn.disabled = false;
-                let total = 0;
+                let subtotal = 0;
                 let totalItems = 0;
                 let html = '<div class="space-y-2">';
 
                 cart.forEach((item, index) => {
                     const sub = item.price * item.qty;
-                    total += sub;
+                    subtotal += sub;
                     totalItems += item.qty;
 
                     html += `
@@ -415,7 +485,51 @@
                 html += '</div>';
                 container.innerHTML = html;
                 badge.textContent = `${totalItems} item`;
+                subtotalEl.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+
+                // Calculate discount
+                const discInput = parseFloat(document.getElementById('discount-input').value) || 0;
+                let discountAmount = 0;
+
+                if (discountType === 'pct') {
+                    discountAmount = Math.round(subtotal * Math.min(discInput, 100) / 100);
+                } else {
+                    discountAmount = Math.min(discInput, subtotal);
+                }
+
+                if (discountAmount > 0) {
+                    discountRow.classList.remove('hidden');
+                    discountEl.textContent = `- Rp ${discountAmount.toLocaleString('id-ID')}`;
+                } else {
+                    discountRow.classList.add('hidden');
+                }
+
+                const total = subtotal - discountAmount;
                 totalEl.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+                document.getElementById('input-discount-amount').value = discountAmount;
+            }
+
+            // ============================================
+            // Discount functions
+            // ============================================
+            function setDiscountType(type) {
+                discountType = type;
+                const rpBtn = document.getElementById('disc-type-rp');
+                const pctBtn = document.getElementById('disc-type-pct');
+
+                if (type === 'rp') {
+                    rpBtn.className = 'px-3 py-2 text-xs font-bold bg-emerald-600 text-white transition';
+                    pctBtn.className = 'px-3 py-2 text-xs font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition';
+                } else {
+                    pctBtn.className = 'px-3 py-2 text-xs font-bold bg-emerald-600 text-white transition';
+                    rpBtn.className = 'px-3 py-2 text-xs font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition';
+                }
+
+                applyDiscount();
+            }
+
+            function applyDiscount() {
+                renderCart();
             }
 
             // ============================================
@@ -479,8 +593,17 @@
                     return;
                 }
 
-                // Update total display
+                // Update payment modal displays
+                document.getElementById('payment-subtotal').textContent = document.getElementById('cart-subtotal').textContent;
                 document.getElementById('payment-total').textContent = document.getElementById('cart-total').textContent;
+
+                const discAmt = parseFloat(document.getElementById('input-discount-amount').value) || 0;
+                if (discAmt > 0) {
+                    document.getElementById('payment-discount-row').classList.remove('hidden');
+                    document.getElementById('payment-discount').textContent = document.getElementById('cart-discount').textContent;
+                } else {
+                    document.getElementById('payment-discount-row').classList.add('hidden');
+                }
 
                 // Reset selections
                 selectPaymentMethod('cash');
@@ -535,6 +658,64 @@
                 document.getElementById('input-payment-status').value = selectedPayStatus;
                 document.getElementById('input-order-status').value = selectedOrderStatus;
                 document.getElementById('pos-form').submit();
+            }
+
+            // ============================================
+            // Promo Code Validation
+            // ============================================
+            async function applyKasirPromo() {
+                const input = document.getElementById('kasir-promo-input');
+                const msgEl = document.getElementById('kasir-promo-msg');
+                const codeEl = document.getElementById('input-discount-code');
+                const discInput = document.getElementById('discount-input');
+
+                const code = input.value.trim();
+                if(!code) return;
+
+                msgEl.classList.remove('hidden');
+                msgEl.className = 'text-xs mt-2 text-gray-500';
+                msgEl.textContent = 'Memvalidasi...';
+
+                // Recalculate subtotal first
+                let subtotal = 0;
+                cart.forEach(item => subtotal += item.price * item.qty);
+
+                if (subtotal <= 0) {
+                    msgEl.className = 'text-xs mt-2 text-red-500';
+                    msgEl.textContent = 'Keranjang masih kosong.';
+                    return;
+                }
+
+                try {
+                    const response = await fetch('{{ route("api.discount.validate") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ code: code.toUpperCase(), subtotal })
+                    });
+                    const data = await response.json();
+
+                    if (data.error) {
+                        msgEl.className = 'text-xs mt-2 text-red-500';
+                        msgEl.textContent = data.error;
+                        codeEl.value = '';
+                    } else if (data.success) {
+                        msgEl.className = 'text-xs mt-2 text-emerald-500';
+                        msgEl.textContent = data.message;
+                        codeEl.value = data.discount.code;
+                        
+                        // Set manual discount input to match calculated
+                        setDiscountType('rp');
+                        discInput.value = data.discount.calculated_discount;
+                        applyDiscount();
+                    }
+                } catch(error) {
+                    msgEl.className = 'text-xs mt-2 text-red-500';
+                    msgEl.textContent = 'Terjadi kesalahan jaringan.';
+                }
             }
         </script>
     @endpush
