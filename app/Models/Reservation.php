@@ -51,6 +51,11 @@ class Reservation extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function items()
+    {
+        return $this->hasManyThrough(OrderItem::class, Order::class);
+    }
+
     /**
      * Generate a unique reservation code.
      */

@@ -20,7 +20,8 @@ class ReservationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Reservation::with(['table', 'orders'])
+        $query = Reservation::with(['table', 'orders', 'orders.items'])
+            ->withCount('items')
             ->orderBy('reservation_date', 'desc')
             ->orderBy('reservation_time_slot', 'desc');
 
@@ -47,7 +48,6 @@ class ReservationController extends Controller
         $categories = MenuCategory::where('is_active', true)
             ->orderBy('order')
             ->get();
-
         return view('reservasi.index', compact('reservations', 'tables', 'menus', 'categories'));
     }
 
