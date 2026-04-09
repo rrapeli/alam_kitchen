@@ -133,16 +133,21 @@
 
             <!-- Right Side Buttons -->
             <div class="flex items-center gap-2 sm:gap-3">
+                @if(!$isOpen)
+                <span class="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full animate-pulse mr-1">
+                    Tutup
+                </span>
+                @endif
                 <!-- Cart Button -->
-                <button onclick="toggleCart()" class="relative border p-2 rounded-full hover:scale-110 transition">
+                <button onclick="{{ $isOpen ? 'toggleCart()' : 'alert(\'Mohon maaf, toko sedang tutup.\')' }}" class="relative border p-2 rounded-full transition {{ !$isOpen ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : 'hover:scale-110' }}">
                     🛒
                     <span id="cart-count"
                         class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
                 </button>
 
                 <!-- Book Table Button -->
-                <button onclick="openBookingModal()"
-                    class="hidden sm:block border px-4 md:px-5 py-2 rounded-full text-xs md:text-sm hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition">
+                <button onclick="{{ $isOpen ? 'openBookingModal()' : 'alert(\'Mohon maaf, toko sedang tutup.\')' }}"
+                    class="hidden sm:block border px-4 md:px-5 py-2 rounded-full text-xs md:text-sm transition {{ !$isOpen ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : 'hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black' }}">
                     Book Table
                 </button>
 
@@ -160,8 +165,8 @@
                 <a href="#menu" class="block hover:text-orange-500 transition">Menu</a>
                 <a href="#about" class="block hover:text-orange-500 transition">About</a>
                 <a href="#contact" class="block hover:text-orange-500 transition">Contact</a>
-                <button onclick="openBookingModal()"
-                    class="w-full border px-5 py-2 rounded-full text-sm hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition">
+                <button onclick="{{ $isOpen ? 'openBookingModal()' : 'alert(\'Mohon maaf, toko sedang tutup.\')' }}"
+                    class="w-full border px-5 py-2 rounded-full text-sm transition {{ !$isOpen ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : 'hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black' }}">
                     Book Table
                 </button>
             </div>
@@ -568,8 +573,8 @@
                         Winning</span>
                 </div>
 
-                <button onclick="openBookingModal()"
-                    class="bg-black dark:bg-white text-white dark:text-black px-6 sm:px-8 py-3 rounded-full hover:scale-105 transition font-semibold">
+                <button onclick="{{ $isOpen ? 'openBookingModal()' : 'alert(\'Mohon maaf, toko sedang tutup.\')' }}"
+                    class="bg-black dark:bg-white text-white dark:text-black px-6 sm:px-8 py-3 rounded-full transition font-semibold {{ !$isOpen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105' }}">
                     Book Your Table
                 </button>
             </div>

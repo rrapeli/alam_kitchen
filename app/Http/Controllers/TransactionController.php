@@ -26,8 +26,9 @@ class TransactionController extends Controller
             ->get();
 
         $activeTax = \App\Models\Tax::where('is_active', true)->first();
+        $store = \App\Models\Store::first();
 
-        return view('transaksi.index', compact('menus', 'categories', 'activeTax'));
+        return view('transaksi.index', compact('menus', 'categories', 'activeTax', 'store'));
     }
 
     /**
@@ -168,6 +169,22 @@ class TransactionController extends Controller
         session()->flash('receipt', $order->load('items')->toArray());
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Toggle the status of the store (Open/Close).
+     */
+    public function toggleStatus(Request $request)
+    {
+        $store = \App\Models\Store::first();
+        if ($store) {
+            $store->update(['is_active' => !$store->is_active]);
+        } else {
+            $store = \App\Models\Store::create(['name' => 'Default Store', 'is_active' => true]);
+        }
+        
+        $statusText = $store->is_active ? 'Buka' : 'Tutup';
+        return redirect()->back()->with('success', "Status toko berhasil diubah menjadi {$statusText}.");
     }
 
     /**

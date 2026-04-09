@@ -30,11 +30,13 @@ class LandingController extends Controller
 
         $store = Store::first();
 
+        $isOpen = $store ? $store->is_active : true;
+
         $faqs = Faq::where('is_active', true)
             ->orderBy('order')
             ->orderBy('id')
             ->get();
 
-        return view('layouts.landing.index', compact('menus', 'categories', 'tables', 'store', 'faqs'));
+        return view('layouts.landing.index', compact('menus', 'categories', 'tables', 'store', 'faqs', 'isOpen'));
     }
 }

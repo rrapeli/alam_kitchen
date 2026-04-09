@@ -146,6 +146,7 @@ Route::middleware(['auth', 'role:kasir,admin,super_admin'])->prefix('kasir')->na
     Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
     Route::get('/transaksi', [TransactionController::class, 'index'])->name('transaksi.index');
     Route::post('/transaksi', [TransactionController::class, 'store'])->name('transaksi.store');
+    Route::post('/transaksi/toggle-status', [TransactionController::class, 'toggleStatus'])->name('transaksi.toggle-status');
     Route::get('/transaksi/{order}/print', [TransactionController::class, 'print'])->name('transaksi.print');
     Route::post('/transaksi/{order}/midtrans-success', [TransactionController::class, 'markMidtransSuccess'])->name('transaksi.midtrans-success');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

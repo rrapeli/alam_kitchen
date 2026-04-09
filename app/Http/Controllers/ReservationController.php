@@ -120,6 +120,13 @@ class ReservationController extends Controller
             'discount_code'        => 'nullable|string',
         ]);
 
+        $storeObj = \App\Models\Store::first();
+        if ($storeObj && !$storeObj->is_active) {
+            return redirect()->back()
+                ->withInput()
+                ->with('booking_error', "Mohon maaf, toko sedang tutup.");
+        }
+
         // Check table capacity
         $table = Table::findOrFail($validated['table_id']);
         if ($validated['guest_count'] > $table->capacity) {

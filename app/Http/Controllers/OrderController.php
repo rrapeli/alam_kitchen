@@ -33,6 +33,11 @@ class OrderController extends Controller
             'discount_code'    => 'nullable|string',
         ]);
 
+        $storeObj = \App\Models\Store::first();
+        if ($storeObj && !$storeObj->is_active) {
+            return redirect()->route('landing')->with('error', "Mohon maaf, toko sedang tutup.");
+        }
+
         try {
             $order = DB::transaction(function () use ($validated) {
                 $subtotal = 0;

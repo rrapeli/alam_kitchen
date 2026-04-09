@@ -37,6 +37,12 @@
                     oninput="filterMenus()"
                     class="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" />
             </div>
+            <form action="{{ route('kasir.transaksi.toggle-status') }}" method="POST" class="shrink-0 flex">
+                @csrf
+                <button type="submit" class="px-5 py-3 rounded-xl font-bold text-sm transition text-white flex-1 sm:flex-none {{ ($store && $store->is_active) ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700' }}">
+                    {{ ($store && $store->is_active) ? '🔴 Tutup Toko' : '🟢 Buka Toko' }}
+                </button>
+            </form>
         </div>
 
         <!-- Category Tabs -->
