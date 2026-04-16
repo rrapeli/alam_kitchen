@@ -146,8 +146,8 @@
                 </button>
 
                 <!-- Book Table Button -->
-                <button onclick="{{ $isOpen ? 'openBookingModal()' : 'alert(\'Mohon maaf, toko sedang tutup.\')' }}"
-                    class="hidden sm:block border px-4 md:px-5 py-2 rounded-full text-xs md:text-sm transition {{ !$isOpen ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : 'hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black' }}">
+                <button onclick="openBookingModal()"
+                    class="hidden sm:block border px-4 md:px-5 py-2 rounded-full text-xs md:text-sm transition opacity-50">
                     Book Table
                 </button>
 
@@ -1488,8 +1488,7 @@
 
         @if(session('booking_success'))
         document.addEventListener('DOMContentLoaded', function() {
-            showNotification('{{ session('
-                booking_success ') }}');
+            showNotification('{{ session('booking_success') }}');
         });
         @endif
 
