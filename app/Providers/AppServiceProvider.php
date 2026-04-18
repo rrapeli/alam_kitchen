@@ -4,24 +4,21 @@ namespace App\Providers;
 
 use App\Models\Store;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // Share store data globally to all views (sidebar, header, etc.)
-        View::share('store', Store::first());
+        // Cek dulu apakah tabel stores sudah ada
+        if (Schema::hasTable('stores')) {
+            View::share('store', Store::first());
+        }
     }
 }
