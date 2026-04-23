@@ -510,25 +510,36 @@
         </div>
     </section>
 
-    <!-- POPULAR DISHES -->
+    <!-- MENU SECTION -->
     <section id="menu" class="pb-16 sm:pb-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
 
-            <div class="flex justify-between items-center mb-8 sm:mb-12">
-                <h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold">Popular Dishes</h2>
-                <div class="flex gap-2">
-                    <button onclick="scrollDishes('left')"
-                        class="border rounded-full p-2 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition">
-                        ←
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 sm:mb-14">
+                <div data-aos="fade-right">
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-semibold mb-3">Our Menu</h2>
+                    <p class="opacity-70 text-sm sm:text-base max-w-md">
+                        Explore our curated selection of dishes, prepared with passion and the finest ingredients.
+                    </p>
+                </div>
+
+                <!-- Main Category Filter -->
+                <div class="flex gap-2 overflow-x-auto pb-2 w-full md:w-auto scrollbar-hide" data-aos="fade-left">
+                    <button type="button" onclick="filterMainDishes('all')"
+                        class="main-cat-btn px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 bg-orange-500 text-white shadow-lg shadow-orange-500/20 whitespace-nowrap"
+                        data-cat="all">
+                        Semua
                     </button>
-                    <button onclick="scrollDishes('right')"
-                        class="border rounded-full p-2 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition">
-                        →
+                    @foreach ($categories as $cat)
+                    <button type="button" onclick="filterMainDishes('{{ $cat->name }}')"
+                        class="main-cat-btn px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-orange-500 whitespace-nowrap"
+                        data-cat="{{ $cat->name }}">
+                        {{ $cat->name }}
                     </button>
+                    @endforeach
                 </div>
             </div>
 
-            <div id="dishes-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+            <div id="dishes-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 min-h-[400px]">
                 <!-- Dishes will be dynamically loaded here -->
             </div>
         </div>
@@ -951,36 +962,115 @@
         // Cart Management
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
+        let currentCategory = 'all';
+        let currentSearch = '';
+
         // Load dishes on page load
-        function loadDishes() {
+        function loadDishes(categoryFilter = 'all', searchQuery = '') {
+            currentCategory = categoryFilter;
+            currentSearch = searchQuery;
+            
             const container = document.getElementById('dishes-container');
+            if (!container) return;
+            
             container.innerHTML = '';
 
-            dishes.forEach((dish, index) => {
+            let filteredDishes = categoryFilter === 'all' 
+                ? dishes 
+                : dishes.filter(d => d.category === categoryFilter);
+            
+            if (searchQuery) {
+                filteredDishes = filteredDishes.filter(d => 
+                    d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    d.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    d.category.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+
+            if (filteredDishes.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-20 text-center" data-aos="fade-up">
+                        <div class="text-5xl mb-6">🍽️</div>
+                        <h3 class="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">Menu Tidak Ditemukan</h3>
+                        <p class="opacity-60 max-w-xs mx-auto text-sm sm:text-base">Maaf, kami tidak menemukan menu yang sesuai dengan filter atau pencarian Anda.</p>
+                        <button onclick="resetFilters()" class="mt-8 bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-full font-semibold hover:scale-105 transition shadow-lg">
+                            Reset Filter
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredDishes.forEach((dish, index) => {
                 const dishCard = `
-                    <div class="group bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition duration-300"
+                    <div class="group bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition duration-500 border border-gray-100 dark:border-gray-700/50"
                          data-aos="fade-up"
-                         data-aos-delay="${index * 100}">
-                        <img class="rounded-2xl mb-4 h-40 sm:h-48 w-full object-cover" src="${dish.image}" alt="${dish.name}" />
+                         data-aos-delay="${(index % 4) * 100}">
+                        <div class="relative overflow-hidden rounded-2xl mb-4">
+                            <img class="h-44 sm:h-52 w-full object-cover transition duration-500 group-hover:scale-110" src="${dish.image}" alt="${dish.name}" />
+                            ${dish.isSpecial ? '<span class="absolute top-3 left-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-lg">Special</span>' : ''}
+                        </div>
                         <div class="mb-2">
-                            <span class="text-xs bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 px-2 py-1 rounded-full">
+                            <span class="text-[10px] uppercase tracking-widest font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded">
                                 ${dish.category}
                             </span>
                         </div>
-                        <h3 class="font-semibold mb-2 text-base sm:text-lg">${dish.name}</h3>
-                        <p class="text-xs sm:text-sm opacity-70 mb-3 line-clamp-2">${dish.description}</p>
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-lg sm:text-xl">Rp ${dish.price.toLocaleString('id-ID')}</span>
+                        <h3 class="font-bold mb-1 text-lg group-hover:text-orange-500 transition-colors line-clamp-1">${dish.name}</h3>
+                        <p class="text-xs opacity-60 mb-4 line-clamp-2 leading-relaxed h-8">${dish.description}</p>
+                        <div class="flex justify-between items-center pt-4 border-t border-gray-50 dark:border-gray-700/50">
+                            <div class="flex flex-col">
+                                ${dish.discountPrice ? `<span class="text-xs opacity-40 line-through">Rp ${dish.price.toLocaleString('id-ID')}</span>` : ''}
+                                <span class="font-bold text-lg text-gray-900 dark:text-white">Rp ${(dish.discountPrice || dish.price).toLocaleString('id-ID')}</span>
+                            </div>
                             <button
                                 onclick="addToCart(${dish.id})"
-                                class="border-2 border-black dark:border-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold group-hover:bg-black group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition">
-                                Add to Cart
+                                class="bg-black dark:bg-white text-white dark:text-black w-10 h-10 rounded-full flex items-center justify-center hover:bg-orange-500 dark:hover:bg-orange-500 hover:text-white transition-all duration-300 shadow-md">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
                             </button>
                         </div>
                     </div>
                 `;
                 container.innerHTML += dishCard;
             });
+
+            if (window.AOS) {
+                setTimeout(() => AOS.refresh(), 100);
+            }
+        }
+
+        function filterMainDishes(cat) {
+            currentCategory = cat;
+            
+            // Update button styles
+            document.querySelectorAll('.main-cat-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.className = "main-cat-btn px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 bg-orange-500 text-white shadow-lg shadow-orange-500/20 whitespace-nowrap";
+                } else {
+                    btn.className = "main-cat-btn px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-orange-500 whitespace-nowrap";
+                }
+            });
+
+            loadDishes(cat, currentSearch);
+        }
+
+        function searchDish() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            loadDishes(currentCategory, query);
+            
+            if (query) {
+                const menuSection = document.getElementById('menu');
+                if (menuSection) {
+                    menuSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        }
+
+        function resetFilters() {
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) searchInput.value = '';
+            filterMainDishes('all');
         }
 
         // Add to cart
@@ -1565,48 +1655,10 @@
             }, 3000);
         }
 
-        // Search functionality
-        function searchDish() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            if (!query) {
-                showNotification('Please enter a search term', 'info');
-                return;
-            }
+        // searchDish and resetFilters are already updated in the previous chunk or added above.
+        // Keeping these placeholders if needed for consistency, but they are fully implemented in loadDishes section.
 
-            const results = dishes.filter(dish =>
-                dish.name.toLowerCase().includes(query) ||
-                dish.description.toLowerCase().includes(query) ||
-                dish.category.toLowerCase().includes(query)
-            );
-
-            if (results.length > 0) {
-                showNotification(`Found ${results.length} dish(es)!`);
-                // Scroll to menu section
-                document.getElementById('menu').scrollIntoView({
-                    behavior: 'smooth'
-                });
-            } else {
-                showNotification('No dishes found!', 'error');
-            }
-        }
-
-        // Scroll dishes (for carousel effect)
-        function scrollDishes(direction) {
-            const container = document.getElementById('dishes-container');
-            const scrollAmount = 300;
-
-            if (direction === 'left') {
-                container.scrollBy({
-                    left: -scrollAmount,
-                    behavior: 'smooth'
-                });
-            } else {
-                container.scrollBy({
-                    left: scrollAmount,
-                    behavior: 'smooth'
-                });
-            }
-        }
+        // Scroll functionality removed as it's replaced by category filtering in a grid.
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
