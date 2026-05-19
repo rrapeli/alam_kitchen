@@ -501,11 +501,11 @@
 
             <div class="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6" data-aos="zoom-in">
                 <img class="rounded-2xl sm:rounded-3xl object-cover h-36 sm:h-40 md:h-48 lg:h-52 w-full hover:scale-105 transition duration-300"
-                    src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38" alt="Food 1" />
+                    src="{{ asset('asset/images/first_hero.jpeg')}}" alt="Food 1" />
                 <img class="rounded-2xl sm:rounded-3xl object-cover h-36 sm:h-40 md:h-48 lg:h-52 w-full hover:scale-105 transition duration-300"
-                    src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092" alt="Food 2" />
+                    src="{{ asset('asset/images/third_hero.jpeg')}}" alt="Food 2" />
                 <img class="rounded-2xl sm:rounded-3xl object-cover h-44 sm:h-52 md:h-60 lg:h-64 w-full col-span-2 hover:scale-105 transition duration-300"
-                    src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5" alt="Food 3" />
+                    src="{{ asset('asset/images/second_hero.jpeg')}}" alt="Food 3" />
             </div>
         </div>
     </section>
@@ -550,7 +550,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
             <img class="rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 w-full h-64 sm:h-80 lg:h-96 object-cover"
-                src="https://images.unsplash.com/photo-1559339352-11d035aa65de" data-aos="fade-right"
+                src="{{ asset('asset/images/image_hero.jpeg') }}" data-aos="fade-right"
                 alt="Restaurant Interior" />
 
             <div data-aos="fade-left">
@@ -969,18 +969,18 @@
         function loadDishes(categoryFilter = 'all', searchQuery = '') {
             currentCategory = categoryFilter;
             currentSearch = searchQuery;
-            
+
             const container = document.getElementById('dishes-container');
             if (!container) return;
-            
+
             container.innerHTML = '';
 
-            let filteredDishes = categoryFilter === 'all' 
-                ? dishes 
-                : dishes.filter(d => d.category === categoryFilter);
-            
+            let filteredDishes = categoryFilter === 'all' ?
+                dishes :
+                dishes.filter(d => d.category === categoryFilter);
+
             if (searchQuery) {
-                filteredDishes = filteredDishes.filter(d => 
+                filteredDishes = filteredDishes.filter(d =>
                     d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     d.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     d.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -1042,7 +1042,7 @@
 
         function filterMainDishes(cat) {
             currentCategory = cat;
-            
+
             // Update button styles
             document.querySelectorAll('.main-cat-btn').forEach(btn => {
                 if (btn.dataset.cat === cat) {
@@ -1058,11 +1058,13 @@
         function searchDish() {
             const query = document.getElementById('search-input').value.toLowerCase();
             loadDishes(currentCategory, query);
-            
+
             if (query) {
                 const menuSection = document.getElementById('menu');
                 if (menuSection) {
-                    menuSection.scrollIntoView({ behavior: 'smooth' });
+                    menuSection.scrollIntoView({
+                        behavior: 'smooth'
+                    });
                 }
             }
         }
@@ -1214,9 +1216,18 @@
                 <span>Diskon</span>
                 <span id="checkout-discount-value">- Rp 0</span>
             </div>`;
+            const taxRate = {{ $taxRate }};
+            const tax = Math.round(total * (taxRate / 100));
+            const finalTotal = total + tax;
+
+            summaryHtml += `<div class="flex justify-between text-sm pt-1">
+                <span>Pajak (${taxRate}%)</span>
+                <span>Rp ${tax.toLocaleString('id-ID')}</span>
+            </div>`;
+
             summaryHtml += `<div class="flex justify-between font-bold text-sm border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                 <span>Total</span>
-                <span id="checkout-total-value">Rp ${total.toLocaleString('id-ID')}</span>
+                <span id="checkout-total-value">Rp ${finalTotal.toLocaleString('id-ID')}</span>
             </div>`;
             window.checkoutSubtotal = total;
             document.getElementById('checkout-promo-input').value = '';
@@ -1437,8 +1448,21 @@
             });
 
             container.innerHTML = html;
+            const taxRate = {{ $taxRate }};
+            const tax = Math.round(total * (taxRate / 100));
+            const finalTotal = total + tax;
+
+            let taxRow = document.getElementById('booking-tax-row');
+            if (!taxRow) {
+                taxRow = document.createElement('div');
+                taxRow.id = 'booking-tax-row';
+                taxRow.className = 'flex justify-between text-sm pt-1';
+                totalEl.parentNode.insertBefore(taxRow, totalEl);
+            }
+            taxRow.innerHTML = `<span>Pajak (${taxRate}%)</span> <span>Rp ${tax.toLocaleString('id-ID')}</span>`;
+
             totalEl.classList.remove('hidden');
-            totalVal.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+            totalVal.textContent = `Rp ${finalTotal.toLocaleString('id-ID')}`;
             inputsContainer.innerHTML = hiddenInputs;
 
             document.getElementById('booking-promo-section').classList.remove('hidden');
@@ -1525,7 +1549,28 @@
                 rowEl.classList.remove('hidden');
                 valEl.textContent = `- Rp ${discAmt.toLocaleString('id-ID')}`;
 
-                const finalTotal = window.checkoutSubtotal - discAmt;
+                const taxRate = {{ $taxRate }};
+                const subAfterDisc = window.checkoutSubtotal - discAmt;
+                const tax = Math.round(subAfterDisc * (taxRate / 100));
+                const finalTotal = subAfterDisc + tax;
+
+                let taxEl = document.getElementById('checkout-tax-value');
+                if (!taxEl) {
+                    // If summary is re-rendered, we need to handle it. 
+                    // But openCheckoutModal already adds it. Let's just update the text in the summary if it exists.
+                    const summary = document.getElementById('checkout-summary');
+                    const taxRow = Array.from(summary.children).find(el => el.textContent.includes('Pajak'));
+                    if (taxRow) {
+                        taxEl = taxRow.lastElementChild;
+                    }
+                }
+                
+                if (taxEl) {
+                    taxEl.textContent = `Rp ${tax.toLocaleString('id-ID')}`;
+                } else {
+                    // Fallback: re-render summary or just update the total
+                }
+
                 totalEl.textContent = `Rp ${finalTotal.toLocaleString('id-ID')}`;
             }
         }
@@ -1564,7 +1609,16 @@
                 rowEl.classList.remove('hidden');
                 valEl.textContent = `- Rp ${discAmt.toLocaleString('id-ID')}`;
 
-                const finalTotal = window.bookingSubtotal - discAmt;
+                const taxRate = {{ $taxRate }};
+                const subAfterDisc = window.bookingSubtotal - discAmt;
+                const tax = Math.round(subAfterDisc * (taxRate / 100));
+                const finalTotal = subAfterDisc + tax;
+
+                const taxRow = document.getElementById('booking-tax-row');
+                if (taxRow) {
+                    taxRow.innerHTML = `<span>Pajak (${taxRate}%)</span> <span>Rp ${tax.toLocaleString('id-ID')}</span>`;
+                }
+
                 totalEl.textContent = `Rp ${finalTotal.toLocaleString('id-ID')}`;
             }
         }
@@ -1575,6 +1629,7 @@
             openBookingModal();
         });
         @endif
+
 
         @if(session('booking_success'))
         document.addEventListener('DOMContentLoaded', function() {

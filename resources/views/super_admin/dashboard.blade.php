@@ -115,51 +115,11 @@
     <!-- Sales Analytics Chart -->
     <div
         class="lg:col-span-2 bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold">Analisis Penjualan</h3>
-            <select
-                class="px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm">
-                <option>Minggu Ini</option>
-                <option>Bulan Ini</option>
-                <option>Tahun Ini</option>
-            </select>
-        </div>
-
-        <!-- Chart Bars -->
-        <div class="flex items-end justify-between gap-2 h-64">
-            <div class="flex-1 flex flex-col items-center">
-                <div class="w-full h-20 bg-gray-200 dark:bg-gray-800 pattern-dots rounded-t-xl"></div>
-                <p class="text-xs text-gray-500 mt-2">S</p>
-            </div>
-            <div class="flex-1 flex flex-col items-center">
-                <div class="w-full h-32 bg-emerald-600 rounded-t-xl"></div>
-                <p class="text-xs text-gray-500 mt-2">M</p>
-            </div>
-            <div class="flex-1 flex flex-col items-center">
-                <div class="w-full h-28 bg-emerald-500 rounded-t-xl"></div>
-                <p class="text-xs text-gray-500 mt-2">T</p>
-            </div>
-            <div class="flex-1 flex flex-col items-center">
-                <div class="w-full h-48 bg-emerald-700 rounded-t-xl relative">
-                    <span
-                        class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-semibold bg-emerald-700 text-white px-2 py-1 rounded">75%</span>
-                </div>
-                <p class="text-xs text-gray-500 mt-2">W</p>
-            </div>
-            <div class="flex-1 flex flex-col items-center">
-                <div class="w-full h-24 bg-gray-200 dark:bg-gray-800 pattern-dots rounded-t-xl"></div>
-                <p class="text-xs text-gray-500 mt-2">T</p>
-            </div>
-            <div class="flex-1 flex flex-col items-center">
-                <div class="w-full h-16 bg-gray-200 dark:bg-gray-800 pattern-dots rounded-t-xl"></div>
-                <p class="text-xs text-gray-500 mt-2">F</p>
-            </div>
-            <div class="flex-1 flex flex-col items-center">
-                <div class="w-full h-12 bg-gray-200 dark:bg-gray-800 pattern-dots rounded-t-xl"></div>
-                <p class="text-xs text-gray-500 mt-2">S</p>
-            </div>
-        </div>
+        <h3 class="text-xl font-bold mb-6">Pendapatan 7 Hari Terakhir</h3>
+        <canvas id="revenueChart" height="100"></canvas>
     </div>
+
+
 
     <!-- Revenue Card -->
     <div
@@ -238,31 +198,19 @@
         </div>
 
         <div class="space-y-3">
-            <button
+            <a href="{{ route('admin.menu.index') }}"
                 class="w-full flex items-center gap-3 p-4 bg-emerald-700 text-white rounded-xl hover:bg-emerald-800 transition">
+
                 <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
-                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                 </div>
-                <span class="font-medium">Pesanan Baru</span>
-            </button>
 
-            <button
-                class="w-full flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                <div
-                    class="w-10 h-10 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                        </path>
-                    </svg>
-                </div>
-                <span class="font-medium">Kelola Staff</span>
-            </button>
+                <span class="font-medium">Tambah Menu</span>
+            </a>
 
-            <button
+            <a href="{{ route('admin.orders.index') }}"
                 class="w-full flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                 <div
                     class="w-10 h-10 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded-lg flex items-center justify-center">
@@ -272,10 +220,10 @@
                         </path>
                     </svg>
                 </div>
-                <span class="font-medium">Lihat Menu</span>
-            </button>
+                <span class="font-medium">Kelola Pesanan</span>
+            </a>
 
-            <button
+            <a href="{{ route('admin.analytics.index') }}"
                 class="w-full flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                 <div
                     class="w-10 h-10 bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 rounded-lg flex items-center justify-center">
@@ -286,8 +234,87 @@
                     </svg>
                 </div>
                 <span class="font-medium">Lihat Laporan</span>
-            </button>
+            </a>
+
+            <a href="{{ route('super_admin.users.index') }}"
+                class="w-full flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                <div
+                    class="w-10 h-10 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
+                    </svg>
+                </div>
+                <span class="font-medium">Kelola Staff</span>
+            </a>
         </div>
     </div>
 </div>
 @endsection
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+
+    // Gradient (biar modern)
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, '#10b981');
+    gradient.addColorStop(1, '#34d399');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: @json($labels),
+            datasets: [{
+                label: 'Pendapatan',
+                data: @json($revenues),
+                backgroundColor: gradient,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return @json($dates)[context[0].dataIndex];
+                        },
+                        label: function(context) {
+                            return 'Rp ' + context.raw.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#9ca3af'
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#9ca3af',
+                        callback: function(value) {
+                            return 'Rp ' + value.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+@endpush

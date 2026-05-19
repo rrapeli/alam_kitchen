@@ -15,59 +15,115 @@ class PaymentCallbackController extends Controller
     {
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
     }
 
     public function handleNotification(Request $request)
     {
         try {
-            $notification = new Notification();
+            $notification = new \Midtrans\Notification();
         } catch (\Exception $e) {
-            Log::error('Midtrans Notification Error: ' . $e->getMessage());
-            return response()->json(['message' => 'Invalid notification'], 400);
+            Log::error($e->getMessage());
+            return response()->json(['error' => 'Invalid'], 400);
         }
 
-        $transactionStatus = $notification->transaction_status;
-        $orderId = $notification->order_id;
-        $paymentType = $notification->payment_type;
-        $fraudStatus = $notification->fraud_status;
-
-        // gateway_order_id in our DB matches $orderId
-        $payment = Payment::where('gateway_order_id', $orderId)->first();
+        $payment = Payment::where('gateway_order_id', $notification->order_id)->first();
 
         if (!$payment) {
-            Log::warning('Midtrans Callback Error: Payment record not found for ' . $orderId);
-            return response()->json(['message' => 'Payment not found'], 404);
+            return response()->json(['error' => 'Not found'], 404);
         }
-
-        // Save raw response for debugging/reconciliation
-        $payment->raw_response = $notification->getResponse();
-        $payment->payment_type = $paymentType;
 
         $order = $payment->order;
 
-        if ($transactionStatus == 'capture') {
-            if ($fraudStatus == 'challenge') {
-                $payment->status = 'pending';
-            } else if ($fraudStatus == 'accept') {
-                $payment->status = 'capture';
+        $status = $notification->transaction_status;
+
+        switch ($status) {
+            case 'capture':
+            case 'settlement':
+                $payment->status = $status;
+                $payment->paid_at = now();
                 $order->payment_status = 'paid';
-            }
-        } else if ($transactionStatus == 'settlement') {
-            $payment->status = 'settlement';
-            $payment->paid_at = now();
-            $order->payment_status = 'paid';
-            $order->status = ($order->reservation_id) ? 'confirmed' : 'processing'; // Or whatever status is appropriate
-        } else if ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
-            $payment->status = $transactionStatus;
-            $order->payment_status = 'unpaid';
-            // Optionally, restore stock here if the order is cancelled.
-        } else if ($transactionStatus == 'pending') {
-            $payment->status = 'pending';
+                break;
+            
+            case 'pending':
+                $payment->status = 'pending';
+                break;
+            
+            case 'expire':
+                $payment->status = 'expire';
+                $order->payment_status = 'expired';
+                break;
+
+            case 'cancel':
+                $payment->status = 'cancel';
+                $order->payment_status = 'failed';
+                break;
+
+            case 'deny':
+                $payment->status = 'deny';
+                $order->payment_status = 'failed';
+                break;
         }
 
         $payment->save();
         $order->save();
 
-        return response()->json(['message' => 'Notification handled']);
+        return response()->json(['message' => 'OK']);
+    }
+
+    public function finish(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $payment = null;
+        
+        if ($orderId) {
+            try {
+                $statusResponse = \Midtrans\Transaction::status($orderId);
+                
+                $payment = Payment::where('gateway_order_id', $orderId)->first();
+                if ($payment) {
+                    $order = $payment->order;
+                    $status = $statusResponse->transaction_status;
+
+                    switch ($status) {
+                        case 'capture':
+                        case 'settlement':
+                            $payment->status = $status;
+                            if (!$payment->paid_at) {
+                                $payment->paid_at = now();
+                            }
+                            $order->payment_status = 'paid';
+                            break;
+
+                        case 'pending':
+                            $payment->status = 'pending';
+                            break;
+
+                        case 'expire':
+                            $payment->status = 'expire';
+                            $order->payment_status = 'expired';
+                            break;
+
+                        case 'cancel':
+                            $payment->status = 'cancel';
+                            $order->payment_status = 'failed';
+                            break;
+
+                        case 'deny':
+                            $payment->status = 'deny';
+                            $order->payment_status = 'failed';
+                            break;
+                    }
+
+                    $payment->save();
+                    $order->save();
+                }
+            } catch (\Exception $e) {
+                Log::error('Midtrans status check error on finish redirect: ' . $e->getMessage());
+            }
+        }
+
+        return view('landing.payment-finish', compact('payment'));
     }
 }
